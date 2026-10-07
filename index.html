@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PANTAU — Dashboard Pantauan Langsung</title>
 <meta name="description" content="Satu dashboard untuk memantau langit, antariksa, udara, internet, dan rilis terbaru — semua data langsung dari sumber publik.">
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
 </head>
 <body>
@@ -21,36 +21,43 @@
   </div>
 </header>
 
+<nav class="filternav" id="filterNav">
+  <button type="button" data-f="semua" class="on">Semua</button>
+  <button type="button" data-f="langit">🌌 Langit &amp; Antariksa</button>
+  <button type="button" data-f="bumi">🌏 Bumi &amp; Udara</button>
+  <button type="button" data-f="rilis">📰 Internet &amp; Rilis</button>
+</nav>
+
 <main class="grid">
-  <section class="card span2" id="mod-radar"><h2>✈️ Sky Radar Indonesia <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-asteroid"><h2>☄️ Asteroid Watch <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-satelit"><h2>🛰️ Satelit di Atas Rumahmu <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-matahari"><h2>☀️ Detak Jantung Matahari <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card span2" id="mod-mesinwaktu"><h2>🕰️ Mesin Waktu Internet <span class="pill manual" data-pill>MANUAL</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-udara"><h2>😷 Udara Indonesia <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-golden"><h2>📸 Golden Hour Countdown <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card span2" id="mod-musik"><h2>🎵 Musik Baru Minggu Ini <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card" id="mod-apps"><h2>📱 Top Charts App Store ID <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card span2" id="mod-buku"><h2>📚 Buku Baru Minggu Ini <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
-  <section class="card span2" id="mod-mars"><h2>🔴 Jendela Mars <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card span2" data-cat="langit" id="mod-radar"><h2>✈️ Sky Radar Indonesia <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="langit" id="mod-asteroid"><h2>☄️ Asteroid Watch <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="langit" id="mod-satelit"><h2>🛰️ Satelit di Atas Rumahmu <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="langit" id="mod-matahari"><h2>☀️ Detak Jantung Matahari <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card span2" data-cat="rilis" id="mod-mesinwaktu"><h2>🕰️ Mesin Waktu Internet <span class="pill manual" data-pill>MANUAL</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="bumi" id="mod-udara"><h2>😷 Udara Indonesia <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="bumi" id="mod-golden"><h2>📸 Golden Hour Countdown <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card span2" data-cat="rilis" id="mod-musik"><h2>🎵 Musik Baru Minggu Ini <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card" data-cat="rilis" id="mod-apps"><h2>📱 Top Charts App Store ID <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card span2" data-cat="rilis" id="mod-buku"><h2>📚 Buku Baru Minggu Ini <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
+  <section class="card span2" data-cat="langit" id="mod-mars"><h2>🔴 Jendela Mars <span class="pill loading" data-pill>MEMUAT</span></h2><div class="body" data-body></div></section>
 </main>
 
 <footer>
   <p>PANTAU — data dari sumber publik: VATSIM, NASA (NeoWs &amp; Image Library), NOAA SWPC, TLE CelesTrak via ivanstanojevic.me, Arquivo.pt, Open-Meteo, MusicBrainz, App Store RSS, Open Library. Tidak ada data yang disimpan; semua ditarik langsung saat halaman dibuka.</p>
 </footer>
 
-<script src="js/vendor/satellite.min.js?v=3"></script>
-<script src="js/main.js?v=3"></script>
-<script src="js/m_radar.js?v=3"></script>
-<script src="js/m_asteroid.js?v=3"></script>
-<script src="js/m_satelit.js?v=3"></script>
-<script src="js/m_matahari.js?v=3"></script>
-<script src="js/m_mesinwaktu.js?v=3"></script>
-<script src="js/m_udara.js?v=3"></script>
-<script src="js/m_golden.js?v=3"></script>
-<script src="js/m_musik.js?v=3"></script>
-<script src="js/m_apps.js?v=3"></script>
-<script src="js/m_buku.js?v=3"></script>
-<script src="js/m_mars.js?v=3"></script>
+<script src="js/vendor/satellite.min.js?v=4"></script>
+<script src="js/main.js?v=4"></script>
+<script src="js/m_radar.js?v=4"></script>
+<script src="js/m_asteroid.js?v=4"></script>
+<script src="js/m_satelit.js?v=4"></script>
+<script src="js/m_matahari.js?v=4"></script>
+<script src="js/m_mesinwaktu.js?v=4"></script>
+<script src="js/m_udara.js?v=4"></script>
+<script src="js/m_golden.js?v=4"></script>
+<script src="js/m_musik.js?v=4"></script>
+<script src="js/m_apps.js?v=4"></script>
+<script src="js/m_buku.js?v=4"></script>
+<script src="js/m_mars.js?v=4"></script>
 </body>
 </html>
