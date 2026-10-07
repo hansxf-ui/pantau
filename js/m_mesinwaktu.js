@@ -20,20 +20,33 @@
     c.set('loading', 'MENCARI ARSIP');
     out.innerHTML = '<p class="empty" style="margin-top:8px">Menarik riwayat arsip ' + S.esc(raw) + '&hellip;</p>';
     var base = 'https://arquivo.pt/textsearch?versionHistory=' + encodeURIComponent(target);
-    S.fetchJson(base + '&maxItems=500', 30000).then(function (r) {
-      var items = (r.ok && r.data && r.data.response_items) || [];
-      var total = (r.ok && r.data && r.data.estimated_nr_results) || items.length;
-      if (!items.length) {
+    S.fetchJson(base + '&maxItems=1&offset=0', 30000).then(function (r0) {
+      var total = (r0.ok && r0.data && r0.data.estimated_nr_results) || 0;
+      var first = (r0.ok && r0.data && r0.data.response_items && r0.data.response_items[0]) || null;
+      if (!total || !first) {
         c.set('error', 'TANPA ARSIP');
         out.innerHTML = '<p class="errtext" style="margin-top:8px">Tidak ada arsip untuk URL ini di Arquivo.pt. Coba variasi lain (dengan/tanpa www), atau cek kalender Wayback Machine secara manual.</p>';
         return;
       }
-      /* one snapshot per year: earliest in each year */
-      var byYear = {};
-      items.slice().sort(function (a, b) { return a.tstamp < b.tstamp ? -1 : 1; }).forEach(function (it) {
-        var y = it.tstamp.slice(0, 4);
-        if (!byYear[y]) byYear[y] = it;
+      /* sample ~16 evenly spaced points across the whole archive, then
+         keep the earliest snapshot of each year */
+      var N = 16, offsets = {};
+      for (var i = 0; i < N; i++) offsets[Math.floor(i * (total - 1) / (N - 1))] = true;
+      var jobs = Object.keys(offsets).map(function (off) {
+        return S.fetchJson(base + '&maxItems=1&offset=' + off, 30000).then(function (r) {
+          var it = (r.ok && r.data && r.data.response_items && r.data.response_items[0]) || null;
+          return it;
+        }).catch(function () { return null; });
       });
+      Promise.all(jobs).then(function (sampled) {
+        var items = sampled.filter(Boolean);
+        var seen = {};
+        items = items.filter(function (it) { if (seen[it.tstamp]) return false; seen[it.tstamp] = true; return true; });
+        var byYear = {};
+        items.slice().sort(function (a, b) { return a.tstamp < b.tstamp ? -1 : 1; }).forEach(function (it) {
+          var y = it.tstamp.slice(0, 4);
+          if (!byYear[y]) byYear[y] = it;
+        });
       var years = Object.keys(byYear).sort();
       c.set('ok', total.toLocaleString('id-ID') + ' SNAPSHOT');
       out.innerHTML = '<p class="empty" style="margin-top:8px">' + S.esc(raw) + ' — ' + total.toLocaleString('id-ID') +
@@ -46,6 +59,7 @@
           return '<figure>' + img + '<figcaption><b>' + y + '</b> · ' + fmtTs(it.tstamp) + '</figcaption></figure>';
         }).join('') + '</div>' +
         '<p class="empty" style="margin-top:6px">Klik gambar untuk membuka arsip lengkap tanggal itu. Sumber: Arquivo.pt.</p>';
+      });
     });
   }
   document.getElementById('mwBtn').addEventListener('click', run);
