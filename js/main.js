@@ -61,6 +61,20 @@
       location.reload();
     }, function () { alert('Izin lokasi ditolak — tetap memakai Makassar.'); });
   });
+  /* Category filter chips: show only the chosen group of cards. */
+  var nav = document.getElementById('filterNav');
+  if (nav) {
+    nav.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      nav.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      var f = b.getAttribute('data-f');
+      document.querySelectorAll('.card[data-cat]').forEach(function (cardEl) {
+        cardEl.style.display = (f === 'semua' || cardEl.getAttribute('data-cat') === f) ? '' : 'none';
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
   renderLocLabel();
   var clockEl = document.getElementById('clock');
   function tickClock() {
