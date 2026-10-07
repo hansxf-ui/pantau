@@ -78,12 +78,19 @@
     c.body.innerHTML = html;
     c.set('ok', above.length + ' DI ATASMU');
   }
+  if (typeof satellite === 'undefined') {
+    c.set('error', 'GAGAL');
+    c.body.innerHTML = '<p class="errtext">Pustaka propagasi orbit gagal dimuat. Coba muat ulang halaman.</p>';
+    return;
+  }
   var fetches = SATS.map(function (s) {
     return S.fetchJson('https://tle.ivanstanojevic.me/api/tle/' + s[0], 20000).then(function (r) {
       if (r.ok && r.data && r.data.line1 && r.data.line2) {
-        loaded.push({ id: s[0], name: s[1], satrec: satellite.twoline2satrec(r.data.line1, r.data.line2) });
+        try {
+          loaded.push({ id: s[0], name: s[1], satrec: satellite.twoline2satrec(r.data.line1, r.data.line2) });
+        } catch (e) { /* skip malformed TLE */ }
       }
-    });
+    }).catch(function () { /* one bad fetch must not stall the module */ });
   });
   Promise.all(fetches).then(function () {
     if (!loaded.length) {
