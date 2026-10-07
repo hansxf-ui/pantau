@@ -3,15 +3,15 @@
 (function () {
   'use strict';
   var S = window.P, c = S.card('mod-mars');
-  var url = 'https://images-api.nasa.gov/search?q=' + encodeURIComponent('mars perseverance rover surface') +
-    '&media_type=image&page_size=60';
+  var url = 'https://images-api.nasa.gov/search?q=' + encodeURIComponent('perseverance rover mars') +
+    '&media_type=image&page_size=100&year_start=2023';
   S.fetchJson(url, 30000).then(function (r) {
     var items = (r.ok && r.data && r.data.collection && r.data.collection.items) || [];
     var rows = items.map(function (it) {
       var d = (it.data || [])[0] || {};
       var img = (it.links || [])[0] || {};
       return { title: d.title || 'Mars', date: d.date_created || '', href: img.href || '', nasa: d.nasa_id || '' };
-    }).filter(function (x) { return x.href && x.date; })
+    }).filter(function (x) { return x.href && x.date && x.date <= new Date().toISOString(); })
       .sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 8);
     if (!rows.length) {
       c.set('error', 'GAGAL'); c.body.innerHTML = '<p class="errtext">Arsip citra NASA tidak terambil.</p>';
