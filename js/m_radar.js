@@ -9,10 +9,18 @@
     ['Medan', 3.59, 98.67], ['Denpasar', -8.65, 115.22], ['Jayapura', -2.55, 140.7], ['Balikpapan', -1.27, 116.9]];
   var pilots = [];
   c.body.innerHTML = '<canvas class="radar" id="radarCv" width="860" height="340"></canvas>' +
+    '<p id="radarNear" style="margin:8px 0 0"></p>' +
     '<p class="empty" id="radarNote">Menghubungi jaringan VATSIM&hellip;</p><ul class="list" id="radarList"></ul>' +
     '<p class="empty" style="margin-top:8px">Ini lalu lintas <b>penerbangan virtual</b> (pilot sungguhan menerbangkan pesawat simulasi di jaringan VATSIM) — ' +
     'API ADS-B pesawat asli tidak mengizinkan dibaca langsung dari browser. Radar asli: ' +
     '<a href="https://globe.adsb.lol/?lat=-2.5&lon=118&zoom=5" target="_blank" rel="noopener noreferrer">globe.adsb.lol</a></p>';
+  function distKm(p) {
+    var loc = S.getLoc();
+    var dLat = (p.latitude - loc.lat) * Math.PI / 180, dLon = (p.longitude - loc.lon) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(loc.lat * Math.PI / 180) * Math.cos(p.latitude * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
   var cv = document.getElementById('radarCv'), ctx = cv.getContext('2d');
   function xy(lat, lon, w, h) { return [(lon - LON0) / (LON1 - LON0) * w, (LAT0 - lat) / (LAT0 - LAT1) * h]; }
   function draw(now) {
@@ -51,6 +59,15 @@
     ctx.fillStyle = '#38e08a';
     ctx.beginPath(); ctx.arc(o[0], o[1], 3.5, 0, Math.PI * 2); ctx.fill();
     var pulse = 0.75 + 0.25 * Math.sin(now / 280);
+    /* On narrow screens, label only the 6 nearest flights — labels over Java
+       otherwise pile up unreadably. Desktop labels everything. */
+    var narrow = window.innerWidth <= 760;
+    var labelSet = null;
+    if (narrow) {
+      labelSet = {};
+      pilots.slice().sort(function (a, b) { return distKm(a) - distKm(b); })
+        .slice(0, 6).forEach(function (p) { labelSet[p.callsign + '|' + p.latitude] = true; });
+    }
     pilots.forEach(function (p) {
       var q = xy(p.latitude, p.longitude, w, h);
       ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate((p.heading || 0) * Math.PI / 180);
@@ -58,8 +75,10 @@
       ctx.fillStyle = '#ffd34d';
       ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4.5, 5); ctx.lineTo(0, 2.4); ctx.lineTo(-4.5, 5); ctx.closePath(); ctx.fill();
       ctx.restore(); ctx.globalAlpha = 1;
-      ctx.font = '9px monospace'; ctx.fillStyle = '#c8d6ea';
-      ctx.fillText(p.callsign, q[0] + 7, q[1] - 4);
+      if (!labelSet || labelSet[p.callsign + '|' + p.latitude]) {
+        ctx.font = '9px monospace'; ctx.fillStyle = '#c8d6ea';
+        ctx.fillText(p.callsign, q[0] + 7, q[1] - 4);
+      }
     });
     requestAnimationFrame(draw);
   }
@@ -72,6 +91,14 @@
       pilots = r.data.pilots.filter(function (p) {
         return p.latitude >= LAT1 && p.latitude <= LAT0 && p.longitude >= LON0 && p.longitude <= LON1;
       });
+      if (pilots.length) {
+        var near = pilots.slice().sort(function (a, b) { return distKm(a) - distKm(b); })[0];
+        var nfp = near.flight_plan || {};
+        document.getElementById('radarNear').innerHTML = '✈️ Pesawat terdekat dari ' + S.esc(S.getLoc().label) +
+          ': <b>' + S.esc(near.callsign) + '</b> (' + S.esc((nfp.departure || '?') + ' → ' + (nfp.arrival || '?')) +
+          ') — ±' + Math.round(distKm(near)).toLocaleString('id-ID') + ' km, di ketinggian ' +
+          Math.round(near.altitude || 0).toLocaleString('id-ID') + ' ft';
+      }
       c.set('ok', 'LIVE · ' + pilots.length + ' PENERBANGAN');
       document.getElementById('radarNote').innerHTML = '<b>' + pilots.length + '</b> penerbangan virtual sedang di atas wilayah Indonesia. Diperbarui tiap 20 detik.';
       pilots.sort(function (a, b2) { return (b2.altitude || 0) - (a.altitude || 0); });
