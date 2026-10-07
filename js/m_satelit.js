@@ -20,7 +20,7 @@
     if (!pv.position) return null;
     var gmst = satellite.gstime(date);
     var geo = satellite.eciToGeodetic(pv.position, gmst);
-    var obs = { longitude: satellite.degreesToRad(loc.lon), latitude: satellite.degreesToRad(loc.lat), height: 0.01 };
+    var obs = { longitude: satellite.degreesToRadians(loc.lon), latitude: satellite.degreesToRadians(loc.lat), height: 0.01 };
     var ecf = satellite.eciToEcf(pv.position, gmst);
     var la = satellite.ecfToLookAngles(obs, ecf);
     return {
