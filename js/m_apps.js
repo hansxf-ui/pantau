@@ -21,12 +21,18 @@
         return;
       }
       c.set('ok', 'CHART HARI INI');
+      function hrefOf(link) {
+        var l = Array.isArray(link) ? link[0] : link;
+        return (l && l.attributes && l.attributes.href) || '';
+      }
       out.innerHTML = '<ul class="list">' + entries.map(function (e, i) {
         var img = (e['im:image'] || []).slice(-1)[0];
         var cat = e.category && e.category.attributes && e.category.attributes.label;
+        var nm = (e['im:name'] && e['im:name'].label) || (e.title && e.title.label) || '(tanpa nama)';
+        var href = hrefOf(e.link);
         return '<li><span style="display:flex;gap:10px;align-items:center;min-width:0">' +
           '<b>' + (i + 1) + '.</b>' + (img ? '<img src="' + S.esc(img.label) + '" alt="" width="34" height="34" style="border-radius:8px">' : '') +
-          '<span style="min-width:0"><a href="' + S.esc(e.link.attributes.href) + '" target="_blank" rel="noopener noreferrer"><b>' + S.esc(e['im:name'].label) + '</b></a>' +
+          '<span style="min-width:0">' + (href ? '<a href="' + S.esc(href) + '" target="_blank" rel="noopener noreferrer"><b>' + S.esc(nm) + '</b></a>' : '<b>' + S.esc(nm) + '</b>') +
           (cat ? '<br><span class="r" style="text-align:left">' + S.esc(cat) + '</span>' : '') + '</span></span></li>';
       }).join('') + '</ul><p class="empty" style="margin-top:6px">Sumber: RSS resmi App Store Indonesia (Apple).</p>';
     });
