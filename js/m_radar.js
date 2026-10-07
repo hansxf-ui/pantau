@@ -15,16 +15,33 @@
     '<a href="https://globe.adsb.lol/?lat=-2.5&lon=118&zoom=5" target="_blank" rel="noopener noreferrer">globe.adsb.lol</a></p>';
   var cv = document.getElementById('radarCv'), ctx = cv.getContext('2d');
   function xy(lat, lon, w, h) { return [(lon - LON0) / (LON1 - LON0) * w, (LAT0 - lat) / (LAT0 - LAT1) * h]; }
-  function draw() {
+  function draw(now) {
     var w = cv.width, h = cv.height;
+    var loc = S.getLoc(), o = xy(loc.lat, loc.lon, w, h);
     ctx.fillStyle = '#081120'; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#12233d'; ctx.lineWidth = 1;
+    /* rotating sweep with fading trail, centered on the observer */
+    var ang = (now / 2400) % (Math.PI * 2);
+    var R = Math.max(w, h);
+    for (var i = 0; i < 28; i++) {
+      var a0 = ang - i * 0.022, alpha = 0.055 * (1 - i / 28);
+      ctx.fillStyle = 'rgba(56,224,138,' + alpha.toFixed(3) + ')';
+      ctx.beginPath(); ctx.moveTo(o[0], o[1]);
+      ctx.arc(o[0], o[1], R, a0 - 0.024, a0);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(56,224,138,.75)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(o[0], o[1]);
+    ctx.lineTo(o[0] + R * Math.cos(ang), o[1] + R * Math.sin(ang)); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#12233d';
     for (var lon = 95; lon <= 140; lon += 5) { var a = xy(0, lon, w, h); ctx.beginPath(); ctx.moveTo(a[0], 0); ctx.lineTo(a[0], h); ctx.stroke(); }
     for (var lat = 5; lat >= -10; lat -= 5) { var b = xy(lat, 0, w, h); ctx.beginPath(); ctx.moveTo(0, b[1]); ctx.lineTo(w, b[1]); ctx.stroke(); }
-    /* range rings around observer */
-    var loc = S.getLoc(), o = xy(loc.lat, loc.lon, w, h);
+    /* range rings + expanding pulse around observer */
     ctx.strokeStyle = '#1d3a5f';
     [60, 120].forEach(function (r) { ctx.beginPath(); ctx.arc(o[0], o[1], r, 0, Math.PI * 2); ctx.stroke(); });
+    var pr = (now / 18) % 130;
+    ctx.strokeStyle = 'rgba(57,182,255,' + (0.5 * (1 - pr / 130)).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(o[0], o[1], pr, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#39b6ff';
     CITIES.forEach(function (ct) {
       var p = xy(ct[1], ct[2], w, h);
@@ -33,15 +50,18 @@
     });
     ctx.fillStyle = '#38e08a';
     ctx.beginPath(); ctx.arc(o[0], o[1], 3.5, 0, Math.PI * 2); ctx.fill();
+    var pulse = 0.75 + 0.25 * Math.sin(now / 280);
     pilots.forEach(function (p) {
       var q = xy(p.latitude, p.longitude, w, h);
       ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate((p.heading || 0) * Math.PI / 180);
+      ctx.globalAlpha = pulse;
       ctx.fillStyle = '#ffd34d';
       ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4.5, 5); ctx.lineTo(0, 2.4); ctx.lineTo(-4.5, 5); ctx.closePath(); ctx.fill();
-      ctx.restore();
+      ctx.restore(); ctx.globalAlpha = 1;
       ctx.font = '9px monospace'; ctx.fillStyle = '#c8d6ea';
       ctx.fillText(p.callsign, q[0] + 7, q[1] - 4);
     });
+    requestAnimationFrame(draw);
   }
   function load() {
     S.fetchJson('https://data.vatsim.net/v3/vatsim-data.json', 25000).then(function (r) {
@@ -55,14 +75,13 @@
       c.set('ok', 'LIVE · ' + pilots.length + ' PENERBANGAN');
       document.getElementById('radarNote').innerHTML = '<b>' + pilots.length + '</b> penerbangan virtual sedang di atas wilayah Indonesia. Diperbarui tiap 20 detik.';
       pilots.sort(function (a, b2) { return (b2.altitude || 0) - (a.altitude || 0); });
-      document.getElementById('radarList').innerHTML = pilots.slice(0, 8).map(function (p) {
+      document.getElementById('radarList').innerHTML = pilots.slice(0, 8).map(function (p) { /* list refresh */
         var fp = p.flight_plan || {};
         var route = (fp.departure || '?') + ' → ' + (fp.arrival || '?');
         return '<li><span><b>' + S.esc(p.callsign) + '</b> <span class="tag">' + S.esc(route) + '</span></span>' +
           '<span class="r">' + Math.round(p.altitude || 0).toLocaleString('id-ID') + ' ft · ' + Math.round(p.groundspeed || 0) + ' kt</span></li>';
       }).join('');
-      draw();
     });
   }
-  draw(); load(); setInterval(load, 20000);
+  requestAnimationFrame(draw); load(); setInterval(load, 15000);
 })();
