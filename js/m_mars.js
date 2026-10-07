@@ -3,8 +3,8 @@
 (function () {
   'use strict';
   var S = window.P, c = S.card('mod-mars');
-  var url = 'https://images-api.nasa.gov/search?q=' + encodeURIComponent('perseverance rover mars') +
-    '&media_type=image&page_size=100&year_start=2023';
+  var url = 'https://images-api.nasa.gov/search?q=' + encodeURIComponent('Jezero crater') +
+    '&media_type=image&page_size=60&year_start=2023';
   S.fetchJson(url, 30000).then(function (r) {
     var items = (r.ok && r.data && r.data.collection && r.data.collection.items) || [];
     var rows = items.map(function (it) {
