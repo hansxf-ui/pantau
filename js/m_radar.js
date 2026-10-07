@@ -94,10 +94,11 @@
       if (pilots.length) {
         var near = pilots.slice().sort(function (a, b) { return distKm(a) - distKm(b); })[0];
         var nfp = near.flight_plan || {};
+        var altTxt = (near.altitude && near.altitude > 100)
+          ? ', di ketinggian ' + Math.round(near.altitude).toLocaleString('id-ID') + ' ft' : '';
         document.getElementById('radarNear').innerHTML = '✈️ Pesawat terdekat dari ' + S.esc(S.getLoc().label) +
           ': <b>' + S.esc(near.callsign) + '</b> (' + S.esc((nfp.departure || '?') + ' → ' + (nfp.arrival || '?')) +
-          ') — ±' + Math.round(distKm(near)).toLocaleString('id-ID') + ' km, di ketinggian ' +
-          Math.round(near.altitude || 0).toLocaleString('id-ID') + ' ft';
+          ') — ±' + Math.round(distKm(near)).toLocaleString('id-ID') + ' km' + altTxt;
       }
       c.set('ok', 'LIVE · ' + pilots.length + ' PENERBANGAN');
       document.getElementById('radarNote').innerHTML = '<b>' + pilots.length + '</b> penerbangan virtual sedang di atas wilayah Indonesia. Diperbarui tiap 20 detik.';
